@@ -1,0 +1,88 @@
+{% extends 'store/base.html' %}
+{% block content %}
+<style>
+    /* Premium Animated Tracking Stepper */
+    .tracking-timeline { position: relative; padding-left: 30px; list-style: none; margin-top: 20px; }
+    .tracking-timeline::before { content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: #eaeaec; }
+    
+    .tracking-step { position: relative; padding-bottom: 40px; }
+    /* Default Dot (Pending) */
+    .tracking-step::before { content: ''; position: absolute; left: -26px; top: 0; width: 14px; height: 14px; border-radius: 50%; background: #eaeaec; border: 2px solid white; box-shadow: 0 0 0 2px #eaeaec; z-index: 2; }
+    
+    /* Active State (Past Steps - Green) */
+    .tracking-step.active::before { background: #03a685; box-shadow: 0 0 0 2px #03a685; }
+    .tracking-step.active h6 { color: #03a685; font-weight: bold; }
+    
+    /* Current State (Blinking/Pulsing) */
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(3, 166, 133, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(3, 166, 133, 0); } 100% { box-shadow: 0 0 0 0 rgba(3, 166, 133, 0); } }
+    .tracking-step.current::before { background: white; border: 3px solid #03a685; box-shadow: 0 0 0 2px #03a685; animation: pulse 2s infinite; z-index: 2; }
+    .tracking-step.current h6 { color: #282c3f; font-weight: bold; }
+</style>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold mb-0">Track Package</h2>
+                <a href="{% url 'order_history' %}" class="btn btn-outline-dark btn-sm">Back to Orders</a>
+            </div>
+
+            <div class="card shadow-sm border-0 p-4">
+                <div class="border-bottom pb-3 mb-4">
+                    <p class="text-muted mb-1 small text-uppercase">Tracking Number</p>
+                    <h5 class="fw-bold">TRK-{{ order.id }}9874{{ order.order_date|date:"s" }}</h5>
+                    <p class="text-muted mb-0 mt-2">Expected Delivery: <strong>{{ order.order_date|add:"5"|date:"d M, Y" }}</strong></p>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-7">
+                        <ul class="tracking-timeline">
+                            <!-- Step 1: Order Placed -->
+                            <li class="tracking-step {% if order.status in 'Order Placed,Processing,Shipped,Out for Delivery,Delivered' %}active{% endif %}">
+                                <h6 class="mb-0">Order Confirmed</h6>
+                                <p class="text-muted small">Your order has been placed successfully. <br> {{ order.order_date|date:"d M, h:i A" }}</p>
+                            </li>
+                            
+                            <!-- Step 2: Processing -->
+                            <li class="tracking-step {% if order.status in 'Processing' %}current{% elif order.status in 'Shipped,Out for Delivery,Delivered' %}active{% endif %}">
+                                <h6 class="mb-0">Processing & Packed</h6>
+                                <p class="text-muted small">Item is being packed at the warehouse facility.</p>
+                            </li>
+                            
+                            <!-- Step 3: Shipped -->
+                            <li class="tracking-step {% if order.status in 'Shipped' %}current{% elif order.status in 'Out for Delivery,Delivered' %}active{% endif %}">
+                                <h6 class="mb-0">Shipped</h6>
+                                <p class="text-muted small">Package has been handed over to the courier.</p>
+                            </li>
+                            
+                            <!-- Step 4: Out for Delivery -->
+                            <li class="tracking-step {% if order.status in 'Out for Delivery' %}current{% elif order.status == 'Delivered' %}active{% endif %}">
+                                <h6 class="mb-0">Out for Delivery</h6>
+                                <p class="text-muted small">The delivery executive is out with your package.</p>
+                            </li>
+                            
+                            <!-- Step 5: Delivered -->
+                            <li class="tracking-step {% if order.status == 'Delivered' %}active{% endif %}" style="padding-bottom: 0;">
+                                <h6 class="mb-0">Delivered</h6>
+                                <p class="text-muted small">Package was delivered successfully.</p>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="col-md-5 mt-4 mt-md-0 bg-light p-3 rounded">
+                        <h6 class="fw-bold text-uppercase small text-muted mb-3">Shipping Details</h6>
+                        {% if order.shipping_address %}
+                            <p class="fw-bold mb-1">{{ order.shipping_address.full_name }}</p>
+                            <p class="text-muted small mb-1">{{ order.shipping_address.street_address }}</p>
+                            <p class="text-muted small mb-2">{{ order.shipping_address.city }}, {{ order.shipping_address.state }} {{ order.shipping_address.pincode }}</p>
+                            <p class="small mb-0">📞 {{ order.shipping_address.phone_number }}</p>
+                        {% else %}
+                            <p class="text-muted small">Address pending synchronization.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

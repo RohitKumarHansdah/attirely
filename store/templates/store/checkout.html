@@ -1,0 +1,249 @@
+{% extends 'store/base.html' %}
+{% block content %}
+<div class="row mt-4 position-relative">
+    <div class="col-md-8">
+        <div class="card p-4 shadow-sm border-0">
+            <h4 class="mb-3">Shipping Information</h4>
+            <form id="checkoutForm" action="{% url 'checkout' %}" method="POST">
+                {% csrf_token %}
+                <!-- NEW PROFESSIONAL ADDRESS GRID -->
+                <div class="row g-3 mb-4 mt-2">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small mb-1">Full Name</label>
+                        <input type="text" name="full_name" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small mb-1">Phone Number</label>
+                        <input type="tel" name="phone_number" class="form-control" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label text-muted small mb-1">Street Address</label>
+                        <textarea name="street_address" class="form-control" rows="2" required></textarea>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label text-muted small mb-1">City</label>
+                        <input type="text" name="city" class="form-control" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small mb-1">State</label>
+                        <input type="text" name="state" class="form-control" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small mb-1">Pincode</label>
+                        <input type="text" name="pincode" class="form-control" maxlength="6" required>
+                    </div>
+                </div>
+                
+                <h4 class="mb-3">Payment Method</h4>
+                
+                <!-- CARD OPTION -->
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="payment_method" id="cardPayment" value="Credit/Debit Card" checked onchange="togglePaymentFields()">
+                    <label class="form-check-label fw-bold" for="cardPayment">Credit/Debit Card</label>
+                </div>
+                <div id="cardFields" class="border p-3 rounded mb-3 bg-light">
+                    <input type="text" class="form-control mb-2" placeholder="Card Number (e.g. 4111 1111 1111 1111)" id="cardNumber" required>
+                    <div class="row">
+                        <div class="col-6">
+                            <input type="text" class="form-control" placeholder="MM/YY" id="cardExp" required>
+                        </div>
+                        <div class="col-6">
+                            <input type="password" class="form-control" placeholder="CVV" id="cardCvv" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UPI OPTION (Cleaned up!) -->
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="payment_method" id="upiPayment" value="UPI" onchange="togglePaymentFields()">
+                    <label class="form-check-label fw-bold" for="upiPayment">UPI (GPay, PhonePe, Paytm)</label>
+                </div>
+                <div id="upiFields" class="border p-3 rounded mb-3 bg-light" style="display: none;">
+                    <p class="small text-muted mb-2">Enter your UPI ID below, <strong>OR</strong> leave it blank to generate a QR Code.</p>
+                    <input type="text" class="form-control" id="upiIdInput" placeholder="e.g. 9876543210@ybl">
+                </div>
+
+                <!-- COD OPTION -->
+                <div class="form-check mb-4">
+                    <input class="form-check-input" type="radio" name="payment_method" id="codPayment" value="Cash on Delivery" onchange="togglePaymentFields()">
+                    <label class="form-check-label fw-bold" for="codPayment">Cash on Delivery (COD)</label>
+                </div>
+
+                <button type="button" class="btn btn-dark btn-lg w-100" onclick="startPaymentSimulation()">Proceed to Pay Securely</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-4 mt-4 mt-md-0">
+        <div class="card p-4 bg-light border-0 shadow-sm">
+            <h5 class="mb-4">Order Summary</h5>
+            {% for item in items %}
+            <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+                <span class="text-muted">{{ item.product.name }} (x{{ item.quantity }})</span>
+                <span class="fw-bold">₹{{ item.product.price }}</span>
+            </div>
+            {% endfor %}
+            <div class="d-flex justify-content-between mt-3 fs-5">
+                <span>Total</span>
+                <span class="fw-bold text-success">₹{{ total_amount }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FULL SCREEN OVERLAY FOR ALL PAYMENT GATEWAY SIMULATIONS -->
+<div id="processingOverlay" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 justify-content-center align-items-center" style="display: none; z-index: 9999;">
+    <div class="bg-white p-5 rounded shadow-lg text-center" style="max-width: 400px; width: 90%;">
+        
+        <!-- 1. CARD OTP SIMULATION -->
+        <div id="otpSection" style="display: none;">
+            <h4 class="mb-3 fw-bold">Bank Authentication</h4>
+            <p class="text-muted small mb-4">A One Time Password (OTP) has been sent to your registered mobile number.</p>
+            <input type="text" class="form-control text-center fs-4 mb-4 shadow-none" placeholder="Enter 6-digit OTP" id="otpInput" maxlength="6" style="letter-spacing: 5px;">
+            <button type="button" class="btn btn-success w-100 py-2 fw-bold" onclick="verifyOTP()">Verify & Pay ₹{{ total_amount }}</button>
+        </div>
+
+        <!-- 2. UPI ID PUSH NOTIFICATION SIMULATION -->
+        <div id="upiIdSection" style="display: none;">
+            <div class="spinner-grow text-primary mb-3" role="status"></div>
+            <h4 class="mb-2 fw-bold">Approve Payment</h4>
+            <p class="text-muted small mb-4">A payment request of <strong class="text-dark">₹{{ total_amount }}</strong> has been sent to <br><span id="displayUpiId" class="badge bg-light text-dark fs-6 mt-2 border"></span></p>
+            <p class="text-muted small mb-4">Please open your UPI app (GPay/PhonePe) to approve the transaction.</p>
+            <button type="button" class="btn btn-outline-primary w-100 py-2 fw-bold" onclick="simulateUpiApproval()">Simulate Phone Approval</button>
+        </div>
+
+        <!-- 3. UPI QR CODE SCAN SIMULATION -->
+        <div id="upiQrSection" style="display: none;">
+            <h4 class="mb-2 fw-bold">Scan to Pay</h4>
+            <p class="text-muted small mb-3">Open any UPI app and scan this code to pay <strong class="text-dark">₹{{ total_amount }}</strong>.</p>
+            <!-- Dynamically passes your cart total into the QR Code -->
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=dummy@upi&pn=Attirely&am={{ total_amount }}" alt="UPI QR" class="img-fluid border p-2 bg-light rounded shadow-sm mb-4">
+            
+            <div class="progress mb-2" style="height: 6px;">
+                <div id="qrProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%"></div>
+            </div>
+            <p id="qrStatusText" class="text-muted small fw-bold">Awaiting Scan...</p>
+        </div>
+
+        <!-- 4. FINAL SUCCESS/PROCESSING SPINNER -->
+        <div id="loadingSection" style="display: none;">
+            <div class="spinner-border text-success mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+            <h5 class="fw-bold">Payment Successful!</h5>
+            <p class="text-muted small mt-2">Generating your official receipt...</p>
+            <p class="text-danger small fw-bold mt-1">Please do not close or refresh this page.</p>
+        </div>
+        
+    </div>
+</div>
+
+<script>
+    // Toggle correct input fields
+    function togglePaymentFields() {
+        const method = document.querySelector('input[name="payment_method"]:checked').value;
+        const isCard = method === 'Credit/Debit Card';
+        
+        document.getElementById('cardFields').style.display = isCard ? 'block' : 'none';
+        document.getElementById('upiFields').style.display = method === 'UPI' ? 'block' : 'none';
+
+        document.getElementById('cardNumber').required = isCard;
+        document.getElementById('cardExp').required = isCard;
+        document.getElementById('cardCvv').required = isCard;
+    }
+
+    // Determine which modal to show
+    function startPaymentSimulation() {
+        const form = document.getElementById('checkoutForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const method = document.querySelector('input[name="payment_method"]:checked').value;
+        const overlay = document.getElementById('processingOverlay');
+
+        // Reset all sections
+        document.getElementById('otpSection').style.display = 'none';
+        document.getElementById('upiIdSection').style.display = 'none';
+        document.getElementById('upiQrSection').style.display = 'none';
+        document.getElementById('loadingSection').style.display = 'none';
+
+        if (method === 'Cash on Delivery') {
+            form.submit(); // Skip simulation for COD
+            return;
+        }
+
+        overlay.style.setProperty('display', 'flex', 'important');
+
+        if (method === 'Credit/Debit Card') {
+            document.getElementById('otpSection').style.display = 'block';
+        } else if (method === 'UPI') {
+            const upiId = document.getElementById('upiIdInput').value;
+            
+            if (upiId.trim() !== '') {
+                // Flow A: They entered an ID. Show the phone approval simulation.
+                document.getElementById('displayUpiId').innerText = upiId;
+                document.getElementById('upiIdSection').style.display = 'block';
+            } else {
+                // Flow B: They left it blank. Show the QR scanner simulation.
+                document.getElementById('upiQrSection').style.display = 'block';
+                startQrSimulation();
+            }
+        }
+    }
+
+    // Card Verify Button
+    function verifyOTP() {
+        const otp = document.getElementById('otpInput').value;
+        if(otp.length < 4) {
+            alert("Please enter a valid OTP to proceed.");
+            return;
+        }
+        document.getElementById('otpSection').style.display = 'none';
+        document.getElementById('loadingSection').style.display = 'block';
+        finishPayment();
+    }
+
+    // UPI ID Verify Button
+    function simulateUpiApproval() {
+        document.getElementById('upiIdSection').style.display = 'none';
+        document.getElementById('loadingSection').style.display = 'block';
+        finishPayment();
+    }
+
+    // The magical 5-second QR code auto-scan logic
+    function startQrSimulation() {
+        const progressBar = document.getElementById('qrProgressBar');
+        const statusText = document.getElementById('qrStatusText');
+        let width = 0;
+
+        const interval = setInterval(() => {
+            width += 2; // Fills up over exactly 5 seconds
+            progressBar.style.width = width + '%';
+
+            if (width === 50) {
+                statusText.innerText = "Payment detected, verifying secure connection...";
+                statusText.classList.add("text-primary");
+            }
+
+            if (width >= 100) {
+                clearInterval(interval);
+                statusText.innerText = "Payment Received!";
+                statusText.classList.replace("text-primary", "text-success");
+                
+                // Wait 1 second so they can read "Received", then switch to loading screen
+                setTimeout(() => {
+                    document.getElementById('upiQrSection').style.display = 'none';
+                    document.getElementById('loadingSection').style.display = 'block';
+                    finishPayment();
+                }, 1000);
+            }
+        }, 100);
+    }
+
+    // Final form submission
+    function finishPayment() {
+        setTimeout(() => {
+            document.getElementById('checkoutForm').submit();
+        }, 2000); 
+    }
+</script>
+{% endblock %}

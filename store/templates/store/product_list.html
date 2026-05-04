@@ -1,0 +1,41 @@
+{% extends 'store/base.html' %}
+{% block content %}
+<div class="row mb-5 align-items-center">
+    <div class="col-md-6">
+        <h1 class="display-4">New Season Arrivals</h1>
+        <p class="lead text-muted">Discover the latest trends in high-end apparel designed for the modern individual.</p>
+        <a href="#shop" class="btn btn-dark">Shop the Collection</a>
+    </div>
+    <div class="col-md-6 d-none d-md-block">
+        <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800" class="img-fluid rounded shadow" alt="Fashion Hero">
+    </div>
+</div>
+
+<h2 id="shop" class="mb-4">Our Collection</h2>
+<div class="row g-4">
+    {% for product in products %}
+    <div class="col-6 col-md-4 col-lg-3">
+        <div class="card h-100">
+            <a href="{% url 'product_detail' product.pk %}">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" class="card-img-top" style="height: 300px; object-fit: cover;" alt="{{ product.name }}">
+                {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 300px; border-bottom: 1px solid #ddd;">
+                        <span class="text-muted">No Image</span>
+                    </div>
+                {% endif %}
+            </a>
+            <div class="card-body px-0">
+                <p class="text-uppercase text-muted mb-1" style="font-size: 0.7rem;">{{ product.category.name }}</p>
+                <h6 class="card-title mb-1">{{ product.name }}</h6>
+                <!-- CHANGED TO RUPEE HERE -->
+                <p class="fw-bold text-success">₹{{ product.price }}</p>
+                <a href="{% url 'add_to_cart' product.id %}" class="btn btn-sm btn-outline-dark w-100">Quick Add</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <p>No products available right now. Check back soon!</p>
+    {% endfor %}
+</div>
+{% endblock %}

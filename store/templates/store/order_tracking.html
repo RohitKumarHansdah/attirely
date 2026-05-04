@@ -1,0 +1,32 @@
+<style>
+    /* Premium Tracking Stepper */
+    .tracking-timeline { position: relative; padding-left: 30px; list-style: none; }
+    .tracking-timeline::before { content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: #eaeaec; }
+    
+    .tracking-step { position: relative; padding-bottom: 30px; }
+    /* The dots */
+    .tracking-step::before { content: ''; position: absolute; left: -26px; top: 0; width: 14px; height: 14px; border-radius: 50%; background: #eaeaec; border: 2px solid white; box-shadow: 0 0 0 2px #eaeaec; }
+    
+    /* Active State (Green) */
+    .tracking-step.active::before { background: #03a685; box-shadow: 0 0 0 2px #03a685; }
+    .tracking-step.active h6 { color: #03a685; font-weight: bold; }
+    
+    /* Blinking "In Progress" State */
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(3, 166, 133, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(3, 166, 133, 0); } 100% { box-shadow: 0 0 0 0 rgba(3, 166, 133, 0); } }
+    .tracking-step.current::before { background: white; border: 3px solid #03a685; box-shadow: 0 0 0 2px #03a685; animation: pulse 2s infinite; }
+</style>
+
+<ul class="tracking-timeline mt-4">
+    <li class="tracking-step active">
+        <h6 class="mb-0">Order Confirmed</h6>
+        <p class="text-muted small">Your order has been placed successfully.</p>
+    </li>
+    <li class="tracking-step current">
+        <h6 class="mb-0">Packed & Ready to Ship</h6>
+        <p class="text-muted small">Item is packed at the warehouse facility.</p>
+    </li>
+    <li class="tracking-step">
+        <h6 class="mb-0">Out for Delivery</h6>
+        <p class="text-muted small">Pending</p>
+    </li>
+</ul>

@@ -1,0 +1,149 @@
+{% extends 'store/base.html' %}
+{% block content %}
+<style>
+    /* Premium E-commerce Styling */
+    .brand-title { font-weight: 700; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 1.5px; color: #282c3f; }
+    .product-subtitle { color: #535665; font-size: 1.2rem; font-weight: 400; margin-bottom: 15px; }
+    .price-block { font-size: 1.5rem; font-weight: 700; color: #282c3f; display: flex; align-items: center; gap: 10px; }
+    .tax-text { font-size: 0.85rem; color: #03a685; font-weight: 700; }
+    
+    /* Size Buttons (Visual Placeholders) */
+    .size-btn { border: 1px solid #bfc0c6; border-radius: 50px; width: 50px; height: 50px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; color: #282c3f; cursor: pointer; transition: 0.2s; background: white; }
+    .size-btn:hover, .size-btn.active { border-color: #ff3e6c; color: #ff3e6c; }
+    
+    /* Myntra-style Primary Button */
+    .btn-action { background-color: #ff3e6c; color: white; font-weight: 700; padding: 15px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px; border: none; transition: 0.3s; }
+    .btn-action:hover { background-color: #f12859; color: white; }
+    
+    /* Utility Sections */
+    .section-header { font-weight: 700; font-size: 1rem; text-transform: uppercase; border-bottom: 1px solid #eaeaec; padding-bottom: 10px; margin-top: 30px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    .delivery-input { border: 1px solid #d4d5d9; border-radius: 4px; padding: 10px 15px; width: 100%; max-width: 250px; font-weight: 600;}
+    .check-btn { color: #ff3e6c; font-weight: 700; background: none; border: none; padding-left: 15px; }
+</style>
+
+<div class="row mt-4 mb-5">
+    <!-- LEFT COLUMN: Image Gallery -->
+    <div class="col-md-6 pe-md-4">
+        <div class="row g-2">
+            <!-- We duplicate your single image to mimic a dynamic gallery layout -->
+            <div class="col-12">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" class="img-fluid rounded w-100 object-fit-cover" style="max-height: 700px;" alt="{{ product.name }}">
+                {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center rounded w-100" style="height: 600px;">
+                        <span class="text-muted">No Image Available</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Product Information -->
+    <div class="col-md-6 ps-md-4 mt-4 mt-md-0">
+        <h1 class="brand-title">{{ product.category.name }}</h1>
+        <h2 class="product-subtitle">{{ product.name }}</h2>
+        
+        <hr style="border-color: #eaeaec;">
+        
+        <div class="price-block mt-3">
+            ₹{{ product.price }}
+        </div>
+        <div class="tax-text mb-4">inclusive of all taxes</div>
+
+        <!-- Size Selection (UI Only for now) -->
+        <h6 class="text-muted small fw-bold mb-3 mt-4">SELECT SIZE</h6>
+
+<!-- We wrap it in a form group in case you want to capture it later -->
+<div class="d-flex mb-4 size-selector-group">
+    
+    <div class="me-2">
+        <input type="radio" name="size" id="size-s" value="S" class="d-none">
+        <label for="size-s" class="size-circle">S</label>
+    </div>
+    
+    <div class="me-2">
+        <input type="radio" name="size" id="size-m" value="M" class="d-none" checked>
+        <label for="size-m" class="size-circle">M</label>
+    </div>
+    
+    <div class="me-2">
+        <input type="radio" name="size" id="size-l" value="L" class="d-none">
+        <label for="size-l" class="size-circle">L</label>
+    </div>
+    
+    <div class="me-2">
+        <input type="radio" name="size" id="size-xl" value="XL" class="d-none">
+        <label for="size-xl" class="size-circle">XL</label>
+    </div>
+
+</div>
+
+<!-- Add this CSS anywhere in the file (or in your base <style> block) -->
+<style>
+    .size-circle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 45px;
+        height: 45px;
+        border: 1px solid #d4d5d9;
+        border-radius: 50%;
+        cursor: pointer;
+        color: #282c3f;
+        transition: all 0.2s ease;
+    }
+    .size-circle:hover {
+        border-color: #ff3e6c; /* Myntra Pink */
+    }
+    
+    /* The Magic: When the hidden radio is checked, change the label's color! */
+    input[type="radio"]:checked + .size-circle {
+        border-color: #ff3e6c;
+        color: #ff3e6c;
+        font-weight: bold;
+    }
+</style>
+
+        <!-- Call to Action -->
+        <div class="d-grid gap-2 mt-4">
+            <a href="{% url 'add_to_cart' product.id %}" class="btn btn-action shadow-sm">
+                🛍️ Add to Bag
+            </a>
+        </div>
+
+        <!-- Delivery Options -->
+        <div class="section-header">
+            🚚 Delivery Options
+        </div>
+        <div class="d-flex align-items-center border rounded p-2 mb-3" style="max-width: 350px;">
+            <input type="text" class="form-control border-0 shadow-none" placeholder="Enter Pincode">
+            <button class="check-btn">Check</button>
+        </div>
+        <ul class="text-muted small" style="list-style-type: none; padding-left: 0; line-height: 2;">
+            <li>✔️ 100% Original Products</li>
+            <li>✔️ Pay on delivery might be available</li>
+            <li>✔️ Easy 14 days returns and exchanges</li>
+            <li>✔️ Try & Buy might be available</li>
+        </ul>
+
+        <!-- Product Details -->
+        <div class="section-header">
+            📄 Product Details
+        </div>
+        <p class="text-dark" style="line-height: 1.8;">
+            {{ product.description |linebreaksbr }}
+        </p>
+        
+        <div class="row mt-4">
+            <div class="col-6">
+                <p class="text-muted small mb-0">Stock Status</p>
+                <p class="fw-bold">{% if product.stock_quantity > 0 %}Available ({{ product.stock_quantity }}){% else %}Out of Stock{% endif %}</p>
+            </div>
+            <div class="col-6">
+                <p class="text-muted small mb-0">Product ID</p>
+                <p class="fw-bold">ATRL-{{ product.id }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

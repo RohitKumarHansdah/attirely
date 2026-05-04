@@ -1,0 +1,60 @@
+{% extends 'store/base.html' %}
+{% block content %}
+<div class="row justify-content-center my-5">
+    <div class="col-md-8">
+        <div class="card p-5 shadow border-0">
+            <div class="text-center mb-4">
+                <h1 class="display-6 fw-bold">ATTIRELY</h1>
+                <p class="text-muted text-uppercase tracking-wide">Official Purchase Receipt</p>
+            </div>
+            <hr>
+            <div class="row my-4">
+                <div class="col-sm-6">
+                    <p class="mb-1 text-muted">Receipt ID:</p>
+                    <p class="fw-bold">{{ receipt.receipt_id }}</p>
+                    <p class="mb-1 mt-3 text-muted">Customer:</p>
+                    <p class="fw-bold">{{ receipt.user.username }}</p>
+                </div>
+                <div class="col-sm-6 text-sm-end mt-3 mt-sm-0">
+                    <p class="mb-1 text-muted">Date:</p>
+                    <p class="fw-bold">{{ receipt.generated_at|date:"M d, Y" }}</p>
+                    <p class="mb-1 mt-3 text-muted">Payment Type:</p>
+                    <p class="fw-bold text-success">{{ receipt.payment.payment_type }}</p>
+                </div>
+            </div>
+            
+            <table class="table mt-4">
+                <thead class="table-light">
+                    <tr>
+                        <th>Item</th>
+                        <th class="text-center">Quantity</th>
+                        <th class="text-end">Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in receipt.order.items.all %}
+                    <tr>
+                        <td>{{ item.product.name }}</td>
+                        <td class="text-center">{{ item.quantity }}</td>
+                        <!-- Changed to Indian Rupee -->
+                        <td class="text-end">₹{{ item.price }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <div class="row mt-4">
+                <div class="col-sm-6 offset-sm-6 text-end">
+                    <p class="mb-1">Subtotal: <strong>₹{{ receipt.order.total_amount }}</strong></p>
+                    <p class="mb-2 border-bottom pb-2">Tax (5%): <strong>₹{{ receipt.tax_details }}</strong></p>
+                    <h3 class="text-success fw-bold">Total: ₹{{ receipt.order.total_amount|add:receipt.tax_details }}</h3>
+                </div>
+            </div>
+            
+            <div class="text-center mt-5">
+                <a href="{% url 'product_list' %}" class="btn btn-outline-dark">Continue Shopping</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

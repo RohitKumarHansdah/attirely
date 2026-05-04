@@ -1,0 +1,104 @@
+{% extends 'store/base.html' %}
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">My Orders</h2>
+        <span class="text-muted">{{ orders.count }} Order(s) found</span>
+    </div>
+
+    {% if orders %}
+        <div class="row g-4">
+            {% for order in orders %}
+            <div class="col-12">
+                <div class="card shadow-sm border-0">
+                    <!-- Order Header -->
+                    <div class="card-header bg-light border-bottom-0 d-flex flex-wrap justify-content-between align-items-center py-3">
+                        <div class="me-4 mb-2 mb-md-0">
+                            <span class="text-muted small d-block text-uppercase tracking-wide">Order Placed</span>
+                            <span class="fw-bold">{{ order.order_date|date:"d M Y" }}</span>
+                        </div>
+                        <div class="me-4 mb-2 mb-md-0">
+                            <span class="text-muted small d-block text-uppercase tracking-wide">Total</span>
+                            <span class="fw-bold text-success">₹{{ order.total_amount }}</span>
+                        </div>
+                        <div class="text-md-end">
+                            <span class="text-muted small d-block text-uppercase tracking-wide">Order #</span>
+                            <span class="fw-bold">ORD-{{ order.order_date|date:"y" }}00{{ order.id }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Order Body -->
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            
+                            <!-- Items List -->
+                            <div class="col-md-8">
+                                <ul class="list-unstyled mb-0">
+                                    {% for item in order.items.all %}
+                                    <li class="mb-3 d-flex align-items-center">
+                                        {% if item.product.image %}
+                                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" style="width: 65px; height: 65px; object-fit: cover;" class="rounded me-3 border shadow-sm">
+                                        {% else %}
+                                            <div class="bg-light rounded me-3 border d-flex align-items-center justify-content-center shadow-sm" style="width: 65px; height: 65px;">
+                                                <span class="text-muted" style="font-size: 10px;">No Img</span>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <a href="{% url 'product_detail' item.product.id %}" class="d-block fw-bold text-dark text-decoration-none fs-5">{{ item.product.name }}</a>
+                                            <span class="text-muted small">Qty: {{ item.quantity }} &nbsp;|&nbsp; ₹{{ item.price }} each</span>
+                                        </div>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            
+                            <!-- Status & Actions -->
+                            <div class="col-md-4 text-md-end mt-4 mt-md-0 border-start-md ps-md-4">
+                                <div class="mb-4">
+                                    <span class="d-block text-muted small text-uppercase mb-1">Current Status</span>
+                                    <!-- Dynamic Color Coding based on the Database Status -->
+                                    {% if order.status == 'Delivered' %}
+                                        <span class="badge bg-success fs-6 py-2 px-3 rounded-pill">📦 {{ order.status }}</span>
+                                    {% elif order.status == 'Order Placed' %}
+                                        <span class="badge bg-secondary fs-6 py-2 px-3 rounded-pill">📝 {{ order.status }}</span>
+                                    {% else %}
+                                        <span class="badge bg-primary fs-6 py-2 px-3 rounded-pill">🚚 {{ order.status }}</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- These buttons are ready to be wired up! -->
+                                <a href="{% url 'track_order' order.id %}" class="btn btn-dark w-100 mb-2 py-2 fw-bold shadow-sm">Track Package</a>
+                                {% if order.receipt %}
+                                    <a href="{% url 'view_receipt' order.receipt.receipt_id %}" class="btn btn-outline-dark w-100 py-2">View Receipt</a>
+                                {% endif %}
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Empty State UI -->
+        <div class="text-center py-5 bg-white shadow-sm rounded border-0 mt-4">
+            <h1 class="display-1 text-muted opacity-25 mb-3">🛍️</h1>
+            <h4 class="fw-bold mb-2">No orders found</h4>
+            <p class="text-muted mb-4">Looks like you haven't made your choice yet. Explore our latest collections!</p>
+            <a href="{% url 'product_list' %}" class="btn btn-dark btn-lg px-5 shadow-sm">Start Shopping</a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    /* Add a subtle line between items and actions on larger screens */
+    @media (min-width: 768px) {
+        .border-start-md {
+            border-left: 1px solid #e9ecef;
+        }
+    }
+    .tracking-wide {
+        letter-spacing: 1px;
+    }
+</style>
+{% endblock %}
